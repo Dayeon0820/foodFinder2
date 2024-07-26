@@ -1,4 +1,5 @@
 import React from "react";
+import SumFood from "./sum";
 import { useState } from "react";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
@@ -34,13 +35,8 @@ const Finder = () => {
   const [cal, setCal] = useState(0);
   const [Fname, setFname] = useState("");
   const [time, setTime] = useState("");
-  const [savedMeal, setSavedMeal] = useState([
-    { time: time },
-    { claories: ((parseFloat(cal) * parseFloat(gram)) / 100).toFixed(2) },
-    { carbs: ((parseFloat(carbs) * parseFloat(gram)) / 100).toFixed(2) },
-    { protein: ((parseFloat(protein) * parseFloat(gram)) / 100).toFixed(2) },
-    { fat: ((parseFloat(fat) * parseFloat(gram)) / 100).toFixed(2) },
-  ]);
+  const [meal, setmeal] = useState({});
+  const [savedMeals, setSavedMeals] = useState([]);
   const getTime = (e) => setTime(e.target.value);
   const onsubmit = (e) => {
     e.preventDefault();
@@ -68,12 +64,31 @@ const Finder = () => {
     setCarbs(parsedValue[2]);
     setProtein(parsedValue[3]);
     setFat(parsedValue[4]);
+  };
 
-    navigate("/sum", {
-      state: { savedMeal },
+  const setItems = () => {
+    setSavedMeals((prevMeals) => {
+      const updatedMeals = [...prevMeals, meal];
+      localStorage.setItem("savedMeals", JSON.stringify(updatedMeals));
+      return updatedMeals;
     });
   };
-  useEffect(() => console.log(savedMeal), [savedMeal]);
+  //이부분 이해 하기
+  useEffect(() => {
+    const newMeal = {
+      time: time,
+      calories: ((parseFloat(cal) * parseFloat(gram)) / 100).toFixed(2),
+      carbs: ((parseFloat(carbs) * parseFloat(gram)) / 100).toFixed(2),
+      protein: ((parseFloat(protein) * parseFloat(gram)) / 100).toFixed(2),
+      fat: ((parseFloat(fat) * parseFloat(gram)) / 100).toFixed(2),
+    };
+    setmeal(newMeal);
+  }, [time, cal, carbs, protein, fat, gram]);
+
+  useEffect(() => {
+    const loadedMeals = JSON.parse(localStorage.getItem("savedMeals")) || []; // <-- 변경된 부분
+    setSavedMeals(loadedMeals);
+  }, []);
 
   return (
     <div>
@@ -122,7 +137,7 @@ const Finder = () => {
           <option value="snacks">간식</option>
           <option value="nights">야식</option>
         </select>
-        <input type="submit" value="식단 추가" id="gramBtn" />
+        <input type="submit" value="칼로리 계산" id="gramBtn" />
       </form>
       <div id="infoBox">
         <h1>
@@ -141,6 +156,14 @@ const Finder = () => {
           지방:{((parseFloat(fat) * parseFloat(gram)) / 100).toFixed(2)} g
         </h2>
       </div>
+
+      <form>
+        <button type="submit" onClick={setItems}>
+          식단 추가
+        </button>
+      </form>
+
+      <SumFood />
     </div>
   );
 };
